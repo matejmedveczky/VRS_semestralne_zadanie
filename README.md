@@ -57,11 +57,12 @@ implementované pomocou PID regulátora so spätnou väzbou z IMU.
 | Komponent      | Model/Špecifikácia   | Rozhranie    | Účel                       |
 |----------------|----------------------|--------------|----------------------------|
 | MCU            | STM32                | -            | Riadenie motorov, PID, IMU |
-| SBC            | Raspberry Pi 4       | WiFi, UART   | ROS gateway                |
-| Motory         | 2× DC775             | PWM          | Diferanciálny pohon        |
-| Motor Driver   | TB6612FNG/DRV8833    | GPIO, PWM    | H-bridge                   |
+| SBC            | Raspberry Pi 4B      | WiFi, UART   | ROS gateway                |
+| Motory         | 2× R775 DC           | PWM          | Diferanciálny pohon        |
+| Motor Driver   | LN298N               | GPIO, PWM    | H-bridge                   |
 | IMU            | MPU6500              | I2C/SPI      | Odhad rýchlosti            |
 | Power Monitor  | Voltage divider      | ADC          | Monitorovanie napätia batérie |
+| Batéria        | Lipol 2200mAh 3S 35C | -            | Napájanie                  |
 
 ---
 
