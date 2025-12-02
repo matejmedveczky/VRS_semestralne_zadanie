@@ -84,11 +84,12 @@ implementované pomocou PID regulátora so spätnou väzbou z IMU.
 **Publishers:**
 - `/battery_state` (sensor_msgs/BatteryState) - napätie z ADC
 
-
+```
 ┌─────┬──────┬─────────┬─────────┬─────────┬──────┐
 │Start│ Dĺžka│ VelL    │ VelR    │ Batéria │ CRC8 │
 │0xBB │ 1B   │ float32 │ float32 │ uint16  │ 1B   │
 └─────┴──────┴─────────┴─────────┴─────────┴──────┘
+```
 
 ---
 
