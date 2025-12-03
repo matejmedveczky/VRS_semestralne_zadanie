@@ -12,6 +12,11 @@ implementované pomocou PID regulátora so spätnou väzbou z IMU.
 - Distribuovaná architektúra: STM32 (low-level control) + RPi (WiFi gateway)
 - Riadenie cez WiFi: ROS2 (PC ↔ RPi) + UART (RPi ↔ STM)
 
+### Členovia tímu
+- Šimon Maco
+- Jakub Benkovsnký
+- Miroslav Valkovič
+- Matej Medveczky
 ---
 
 ## 2. SYSTÉMOVÁ ARCHITEKTÚRA
@@ -89,26 +94,26 @@ implementované pomocou PID regulátora so spätnou väzbou z IMU.
 
 ### 4.2 STM32 Firmware
 
-#### Modul 1: UART komunikácia (Miro)
+#### Modul 1: UART komunikácia (Miroslav)
 **Zodpovednosti:**
 - RX interrupt handler + ring buffer
 - Parsovanie frame s CRC validáciou
 
-#### Modul 2: MPU6500 Driver (Miro)
+#### Modul 2: MPU6500 Driver (Miroslav)
 **Zodpovednosti:**
 - I2C/SPI inicializácia
 - Čítanie: accel XYZ, gyro XYZ
 - Kalibrácia
 
-#### Modul 3: Riadenie motorov (Mato)
+#### Modul 3: Riadenie motorov (Matej)
 **Zodpovednosti:**
 - PWM generácia (TIM2, TIM3)
 
-#### Modul 4: PID regulátor (Mato)
+#### Modul 4: PID regulátor (Matej)
 **Zodpovednosti:**
 - Dvojitý PID regulátor riadiaci motory
 
-#### Modul 5: Monitorovanie batérie (Kubo)
+#### Modul 5: Monitorovanie batérie (Jakub)
 **Zodpovednosti:**
 - ADC čítanie cez voltage divider
 - Alarm pri nízkom napätí: < 10.5V → varovná správa
