@@ -14,7 +14,7 @@ implementované pomocou PID regulátora so spätnou väzbou z IMU.
 
 ### Členovia tímu
 - Šimon Maco
-- Jakub Benkovsnký
+- Jakub Benkovský
 - Miroslav Valkovič
 - Matej Medveczky
 ---
