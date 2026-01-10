@@ -111,7 +111,20 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  float real_angular = read_gyroscope_z(); //TODO
+	  float real_linear = read_accelerometer_x(); //TODO
 
+	  float desired_angular = read_angular_input(); //TODO
+	  float desired_linear = read_linear_input(); //TODO
+
+
+	  tank_control(&motorLeft, &motorRight,
+				   desired_linear, desired_angular,
+				   real_accel, real_gyro,
+				   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
+				   30.0f, 3.0f, 0.5f);      // angulr gains (Kp, Ki, Kd)
+
+	  HAL_Delay(10);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

@@ -32,6 +32,7 @@ void DC_Motor_Set(DC_Motor *motor, float speed);
 
 void tank_control(DC_Motor *left, DC_Motor *right,
                   float v_linear_desired, float v_angular_desired,
-                  float v_linear_actual, float v_angular_actual);
-
+                  float v_linear_actual, float v_angular_actual,
+                  float KP_lin, float KI_lin, float KD_lin,
+                  float KP_ang, float KI_ang, float KD_ang);
 #endif
