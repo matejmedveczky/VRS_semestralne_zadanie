@@ -2,7 +2,7 @@
 
 
 
-\1. POPIS MODULU
+1. POPIS MODULU
 
 Tento modul zabezpečuje monitorovanie stavu napájacej batérie mobilného robota.
 
@@ -16,7 +16,7 @@ na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť
 
 
 
-\2. FUNKCIONALITA
+2. FUNKCIONALITA
 
 \- Meranie napätia batérie pomocou ADC (cez voltage divider)
 
@@ -24,15 +24,15 @@ na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť
 
 \- Detekcia nízkeho napätia batérie:
 
-&nbsp; - napätie < 10.5 V → varovný stav
+&nbsp;&nbsp;&nbsp; - napätie < 10.5 V → varovný stav
 
 \- Odosielanie informácií o stave batérie do nadradeného systému (Raspberry Pi)
 
-&nbsp; - zobrazenie stavu batérie v riadiacom rozhraní
+&nbsp;&nbsp;&nbsp; - zobrazenie stavu batérie v riadiacom rozhraní
 
 \- Obmedzenie funkcií mobilného robota na základe stavu batérie:
 
-&nbsp; - zníženie výkonu
+&nbsp;&nbsp;&nbsp; - zníženie výkonu
 
-&nbsp; - deaktivácia vybraných funkcií pri kritickom napätí
+&nbsp;&nbsp;&nbsp; - deaktivácia vybraných funkcií pri kritickom napätí
 
