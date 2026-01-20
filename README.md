@@ -2,7 +2,7 @@
 
 
 
-1. POPIS MODULU
+## 1. POPIS MODULU
 
    - Tento modul zabezpečuje monitorovanie stavu napájacej batérie mobilného robota. Jeho úlohou je priebežne sledovať napätie
      batérie, vyhodnocovať jej stav a na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť robota.
@@ -13,7 +13,7 @@
 
 
 
-2. FUNKCIONALITA
+## 2. FUNKCIONALITA
 
   - Meranie napätia batérie pomocou ADC (cez voltage divider)
 
