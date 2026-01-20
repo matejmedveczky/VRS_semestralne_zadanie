@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "control.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -49,7 +50,7 @@ DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
-
+DC_Motor motorLeft, motorRight;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,7 +96,6 @@ int main(void)
 
   /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART2_UART_Init();
@@ -103,6 +103,10 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  DC_Motor_Init(&motorLeft, &htim1, TIM_CHANNEL_1,
+                GPIOA, GPIO_PIN_0, GPIOA, GPIO_PIN_1);
+  DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_2,
+                GPIOA, GPIO_PIN_3, GPIOA, GPIO_PIN_4);
 
   /* USER CODE END 2 */
 
@@ -120,7 +124,7 @@ int main(void)
 
 	  tank_control(&motorLeft, &motorRight,
 				   desired_linear, desired_angular,
-				   real_accel, real_gyro,
+				   real_angular, real_linear,
 				   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
 				   30.0f, 3.0f, 0.5f);      // angulr gains (Kp, Ki, Kd)
 

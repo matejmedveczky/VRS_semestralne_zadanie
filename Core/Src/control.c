@@ -1,10 +1,3 @@
-/*
- * control.c
- *
- *  Created on: Jan 10, 2026
- *      Author: matej
- */
-
 #include "control.h"
 
 typedef struct {
@@ -24,6 +17,8 @@ void DC_Motor_Init(DC_Motor *motor, TIM_HandleTypeDef *htim, uint32_t channel,
     motor->dir1_pin = dir1_pin;
     motor->dir2_port = dir2_port;
     motor->dir2_pin = dir2_pin;
+
+    HAL_TIM_PWM_Start(htim, channel);
 }
 
 void DC_Motor_Set(DC_Motor *motor, float speed) {

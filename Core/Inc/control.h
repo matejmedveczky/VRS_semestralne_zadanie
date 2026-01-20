@@ -1,10 +1,3 @@
-/*
- * control.h
- *
- *  Created on: Jan 10, 2026
- *      Author: matej
- */
-
 #ifndef CONTROL_H
 #define CONTROL_H
 
