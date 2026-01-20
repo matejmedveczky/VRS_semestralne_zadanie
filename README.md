@@ -4,11 +4,7 @@
 
 1. POPIS MODULU
 
-Tento modul zabezpečuje monitorovanie stavu napájacej batérie mobilného robota.
-
-Jeho úlohou je priebežne sledovať napätie batérie, vyhodnocovať jej stav a
-
-na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť robota.
+Tento modul zabezpečuje monitorovanie stavu napájacej batérie mobilného robota. Jeho úlohou je priebežne sledovať napätie batérie, vyhodnocovať jej stav a na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť robota.
 
 
 
