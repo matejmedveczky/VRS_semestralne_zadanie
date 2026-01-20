@@ -15,7 +15,7 @@
 
 2. FUNKCIONALITA
 
-   - Meranie napätia batérie pomocou ADC (cez voltage divider)
+  - Meranie napätia batérie pomocou ADC (cez voltage divider)
 
   - Vyhodnotenie stavu batérie na základe nameraného napätia
 
