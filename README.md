@@ -117,6 +117,8 @@ implementované pomocou PID regulátora so spätnou väzbou z IMU.
 **Zodpovednosti:**
 - ADC čítanie cez voltage divider
 - Alarm pri nízkom napätí: < 10.5V → varovná správa
+- Odosielanie informácií o stave batérie do nadradeného systému (Raspberry Pi)
+- Obmedzenie funkcií mobilného robota na základe stavu batérie
 
 ## Návod na použitie
 ### Klonovanie
