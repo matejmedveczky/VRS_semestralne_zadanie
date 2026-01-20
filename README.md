@@ -2,7 +2,7 @@
 
 
 
-\## Popis modulu
+\1. POPIS MODULU
 
 Tento modul zabezpečuje monitorovanie stavu napájacej batérie mobilného robota.
 
@@ -16,7 +16,7 @@ na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť
 
 
 
-\## Funkcionalita
+\2. FUNKCIONALITA
 
 \- Meranie napätia batérie pomocou ADC (cez voltage divider)
 
