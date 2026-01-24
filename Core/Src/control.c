@@ -21,7 +21,7 @@ void DC_Motor_Init(DC_Motor *motor, TIM_HandleTypeDef *htim, uint32_t channel,
     HAL_TIM_PWM_Start(htim, channel);
 }
 
-void DC_Motor_Set(DC_Motor *motor, float speed) {
+float DC_Motor_Set(DC_Motor *motor, float speed) {
     uint16_t max_pwm = __HAL_TIM_GET_AUTORELOAD(motor->htim);
 
     float clamped = speed;
@@ -39,13 +39,16 @@ void DC_Motor_Set(DC_Motor *motor, float speed) {
 
     uint16_t pwm = (uint16_t)((clamped / MAX_SPEED) * max_pwm);
     __HAL_TIM_SET_COMPARE(motor->htim, motor->channel, pwm);
+
+    return (clamped / MAX_SPEED);
 }
 
-void tank_control(DC_Motor *left, DC_Motor *right,
-				  float desired_linear, float desired_angular,
+Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
+				  float desired_angular, float desired_linear,
 				  float real_angular, float real_linear,
                   float KP_lin, float KI_lin, float KD_lin,
                   float KP_ang, float KI_ang, float KD_ang) {
+
 
     // LINEAR
     float error_linear = v_linear_desired - v_linear_actual;
@@ -68,6 +71,9 @@ void tank_control(DC_Motor *left, DC_Motor *right,
     float speed_left = output_linear - (output_angular * TRACK_WIDTH / 2.0f);
     float speed_right = output_linear + (output_angular * TRACK_WIDTH / 2.0f);
 
-    DC_Motor_Set(left, speed_left);
-    DC_Motor_Set(right, speed_right);
+    Motor_PWM pwm;
+    pwm.left = DC_Motor_Set(left, speed_left);
+    pwm.right = DC_Motor_Set(right, speed_right);
+
+    return pwm;
 }

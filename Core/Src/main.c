@@ -122,11 +122,11 @@ int main(void)
 	  float desired_linear = read_linear_input(); //TODO
 
 
-	  tank_control(&motorLeft, &motorRight,
-				   desired_linear, desired_angular,
-				   real_angular, real_linear,
-				   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
-				   30.0f, 3.0f, 0.5f);      // angulr gains (Kp, Ki, Kd)
+      Motor_PWM pwm = tank_control(&motorLeft, &motorRight,
+                   desired_angular, desired_linear,
+                   real_angular, real_linear,
+                   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
+                   30.0f, 3.0f, 0.5f);      // angular gains (Kp, Ki, Kd)
 
 	  HAL_Delay(10);
     /* USER CODE BEGIN 3 */
