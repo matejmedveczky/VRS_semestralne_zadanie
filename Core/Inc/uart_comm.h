@@ -23,6 +23,7 @@ HAL_StatusTypeDef UARTComm_TransmitDMA(const uint8_t *data, uint16_t size);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
+void UARTComm_SendFloat(float value);
 
 CmdVel UARTComm_GetLatestCmd(void);
 

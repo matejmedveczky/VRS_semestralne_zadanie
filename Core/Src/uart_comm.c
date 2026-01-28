@@ -18,6 +18,12 @@
 #define RX_DMA_BUF_SZ 128
 #define RB_SZ 256
 
+#define SOF1_F32 0xA1
+#define SOF2_F32 0x1A
+
+#define F32_PAYLOAD_LEN 4
+#define F32_FRAME_LEN (3 + F32_PAYLOAD_LEN + 2)
+
 /* TX uses a small staging buffer so caller can pass a temporary pointer. */
 #define TX_DMA_BUF_SZ 64
 
@@ -278,6 +284,26 @@ void UARTComm_Process(void)
       s_latest.v_angular = 0.0f;
     }
   }
+}
+
+void UARTComm_SendFloat(float value)
+{
+    uint8_t frame[F32_FRAME_LEN];
+
+    frame[0] = SOF1_F32;
+    frame[1] = SOF2_F32;
+    frame[2] = F32_PAYLOAD_LEN;
+
+    /* Copy float as little-endian */
+    memcpy(&frame[3], &value, 4);
+
+
+    /* CRC over [0..6] */
+    uint16_t crc = crc16_ccitt_false(frame, 3 + F32_PAYLOAD_LEN);
+    frame[7] = (uint8_t)(crc & 0xFF);       // LSB
+    frame[8] = (uint8_t)((crc >> 8) & 0xFF);// MSB
+
+    UARTComm_TransmitDMA(frame, F32_FRAME_LEN);
 }
 
 CmdVel UARTComm_GetLatestCmd(void) { return s_latest; }

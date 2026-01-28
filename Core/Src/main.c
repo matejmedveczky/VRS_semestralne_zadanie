@@ -24,6 +24,8 @@
 
 #include "uart_comm.h"
 #include "mpu6500.h"
+#include <math.h>
+
 
 /* USER CODE END Includes */
 
@@ -125,18 +127,19 @@ int main(void)
 	  UARTComm_Process();
 
 	      float real_angular = read_gyroscope_z();       // TODO removed: now implemented
-	      float real_linear  = read_accelerometer_x();   // TODO removed: now implemented
+	      float real_linear  = 0;//twodecimalplacesround(read_accelerometer_x());   // TODO removed: now implemented
 
 	      float desired_angular = read_angular_input();  // TODO removed: now implemented
-	      float desired_linear  = read_linear_input();   // TODO removed: now implemented
+	      float desired_linear  = 0;//read_linear_input();   // TODO removed: now implemented
 
-	      tank_control(&motorLeft, &motorRight,
-	                   desired_linear, desired_angular,
-	                   real_angular, real_linear,
-	                   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
-	                   30.0f, 3.0f, 0.5f);      // angular gains (Kp, Ki, Kd)
+	      Reg_State state = tank_control(&motorLeft, &motorRight,
+	    		  	  desired_angular, desired_linear,
+					  real_angular, real_linear ,
+	                   0.0f, 0.0f, 0.0f,       // linear gains (Kp, Ki, Kd)
+	                   4.0f, 0.0f, 0.0f);      // angular gains (Kp, Ki, Kd)
 
-	      HAL_Delay(10);
+		  UARTComm_SendFloat(real_angular);
+	      HAL_Delay(4);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -407,7 +410,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+float twodecimalplacesround(float value){
+	return roundf(value*100.0f)/100.0f;
+}
 /* USER CODE END 4 */
 
 /**

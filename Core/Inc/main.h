@@ -61,7 +61,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-
+float twodecimalplacesround(float value);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

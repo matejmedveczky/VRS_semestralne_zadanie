@@ -5,6 +5,8 @@ typedef struct {
     float prev_error;
 } PID_State;
 
+
+
 static PID_State pid_linear = {0};
 static PID_State pid_angular = {0};
 
@@ -21,7 +23,7 @@ void DC_Motor_Init(DC_Motor *motor, TIM_HandleTypeDef *htim, uint32_t channel,
     HAL_TIM_PWM_Start(htim, channel);
 }
 
-void DC_Motor_Set(DC_Motor *motor, float speed) {
+float DC_Motor_Set(DC_Motor *motor, float speed) {
     uint16_t max_pwm = __HAL_TIM_GET_AUTORELOAD(motor->htim);
 
     float clamped = speed;
@@ -39,11 +41,13 @@ void DC_Motor_Set(DC_Motor *motor, float speed) {
 
     uint16_t pwm = (uint16_t)((clamped / MAX_SPEED) * max_pwm);
     __HAL_TIM_SET_COMPARE(motor->htim, motor->channel, pwm);
+
+    return (clamped / MAX_SPEED);
 }
 
-void tank_control(DC_Motor *left, DC_Motor *right,
-                  float v_linear_desired, float v_angular_desired,
-                  float v_linear_actual, float v_angular_actual,
+Reg_State tank_control(DC_Motor *left, DC_Motor *right,
+				  float v_angular_desired, float v_linear_desired,
+				  float v_angular_actual, float v_linear_actual,
                   float KP_lin, float KI_lin, float KD_lin,
                   float KP_ang, float KI_ang, float KD_ang) {
 
@@ -65,9 +69,17 @@ void tank_control(DC_Motor *left, DC_Motor *right,
     float output_angular = KP_ang * error_angular + KI_ang * pid_angular.integral + KD_ang * derivative_angular;
     pid_angular.prev_error = error_angular;
 
-    float speed_left = output_linear - (output_angular * TRACK_WIDTH / 2.0f);
-    float speed_right = output_linear + (output_angular * TRACK_WIDTH / 2.0f);
+    float speed_left = (output_linear - (output_angular * TRACK_WIDTH / 2.0f))/WHEEL_RADIUS;
+    float speed_right = (output_linear + (output_angular * TRACK_WIDTH / 2.0f))/WHEEL_RADIUS;
 
-    DC_Motor_Set(left, speed_left);
-    DC_Motor_Set(right, speed_right);
+
+    Reg_State state;
+    state.pwm_left = DC_Motor_Set(left, speed_left);
+    state.pwm_right = DC_Motor_Set(right, speed_right);
+    state.e_ang = error_angular;
+    state.e_lin = error_linear;
+    state.u_ang = output_angular;
+    state.u_lin = output_linear;
+
+    return state;
 }

@@ -47,13 +47,13 @@ bool MPU6500_Init(I2C_HandleTypeDef *hi2c) {
 
   /* basic config: sample rate + DLPF */
   (void)i2c_wr(REG_SMPLRT_DIV, 0x04); /* ~200 Hz */
-  (void)i2c_wr(REG_CONFIG, 0x03);     /* DLPF */
+  (void)i2c_wr(REG_CONFIG, 0x05);     /* DLPF */
 
   /* gyro ±250 dps */
-  (void)i2c_wr(REG_GYRO_CONFIG, 0x00);
+  (void)i2c_wr(REG_GYRO_CONFIG, 0x08);
 
   /* accel ±2g */
-  (void)i2c_wr(REG_ACCEL_CONFIG, 0x00);
+  (void)i2c_wr(REG_ACCEL_CONFIG, 0x18);
 
   /* calibration (robot must be stationary) */
   const int N = 300;
