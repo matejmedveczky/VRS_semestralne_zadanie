@@ -18,9 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "control.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "uart_comm.h"
+#include "mpu6500.h"
 
 /* USER CODE END Includes */
 
@@ -49,7 +52,7 @@ DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
-
+DC_Motor motorLeft, motorRight;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,6 +106,14 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  DC_Motor_Init(&motorLeft, &htim1, TIM_CHANNEL_1,
+                GPIOA, GPIO_PIN_0, GPIOA, GPIO_PIN_1);
+  DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_2,
+                GPIOA, GPIO_PIN_3, GPIOA, GPIO_PIN_4);
+
+  /* --- Miroslav: UART RX + MPU6500 --- */
+  UARTComm_Init(&huart2);
+  (void)MPU6500_Init(&hi2c1);
 
   /* USER CODE END 2 */
 
@@ -111,7 +122,21 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  UARTComm_Process();
 
+	      float real_angular = read_gyroscope_z();       // TODO removed: now implemented
+	      float real_linear  = read_accelerometer_x();   // TODO removed: now implemented
+
+	      float desired_angular = read_angular_input();  // TODO removed: now implemented
+	      float desired_linear  = read_linear_input();   // TODO removed: now implemented
+
+	      tank_control(&motorLeft, &motorRight,
+	                   desired_linear, desired_angular,
+	                   real_angular, real_linear,
+	                   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
+	                   30.0f, 3.0f, 0.5f);      // angular gains (Kp, Ki, Kd)
+
+	      HAL_Delay(10);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -130,14 +155,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -249,7 +272,7 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_OC_Init(&htim1) != HAL_OK)
+  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -260,18 +283,18 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }

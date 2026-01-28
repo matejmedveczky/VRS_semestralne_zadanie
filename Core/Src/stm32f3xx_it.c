@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
+  * Copyright (c) 2026 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -22,6 +22,7 @@
 #include "stm32f3xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "uart_comm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,8 +56,25 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+/* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_usart2_rx;
 extern DMA_HandleTypeDef hdma_usart2_tx;
+extern UART_HandleTypeDef huart2;
+
+/* ... */
+
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+  /* USER CODE END USART2_IRQn 0 */
+
+  HAL_UART_IRQHandler(&huart2);
+
+  /* USER CODE BEGIN USART2_IRQn 1 */
+  UARTComm_OnUartIrq(&huart2);
+  /* USER CODE END USART2_IRQn 1 */
+}
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */

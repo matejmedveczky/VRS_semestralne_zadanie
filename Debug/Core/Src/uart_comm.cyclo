@@ -1,0 +1,14 @@
+../Core/Src/uart_comm.c:42:17:crc16_ccitt_false	4
+../Core/Src/uart_comm.c:54:13:rb_push	2
+../Core/Src/uart_comm.c:64:13:rb_peek	3
+../Core/Src/uart_comm.c:74:13:rb_drop	3
+../Core/Src/uart_comm.c:84:13:uartcomm_drain_dma_to_rb	10
+../Core/Src/uart_comm.c:102:6:UARTComm_Init	3
+../Core/Src/uart_comm.c:146:19:UARTComm_TransmitDMA	6
+../Core/Src/uart_comm.c:160:6:HAL_UART_TxCpltCallback	2
+../Core/Src/uart_comm.c:167:6:UARTComm_OnUartIrq	5
+../Core/Src/uart_comm.c:178:13:parse_one_frame	9
+../Core/Src/uart_comm.c:212:6:UARTComm_Process	4
+../Core/Src/uart_comm.c:228:8:UARTComm_GetLatestCmd	1
+../Core/Src/uart_comm.c:230:7:read_linear_input	2
+../Core/Src/uart_comm.c:231:7:read_angular_input	2

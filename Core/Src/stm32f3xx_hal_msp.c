@@ -21,7 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 extern DMA_HandleTypeDef hdma_usart2_rx;
 
@@ -29,36 +28,29 @@ extern DMA_HandleTypeDef hdma_usart2_tx;
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN Define */
-
 /* USER CODE END Define */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN Macro */
-
 /* USER CODE END Macro */
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* External functions --------------------------------------------------------*/
 /* USER CODE BEGIN ExternalFunctions */
-
 /* USER CODE END ExternalFunctions */
 
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -287,7 +279,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     /* USER CODE BEGIN USART2_MspInit 1 */
 
     /* USER CODE END USART2_MspInit 1 */
-
+    HAL_NVIC_SetPriority(USART2_IRQn, 4, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
   }
 
 }
@@ -325,5 +318,4 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 }
 
 /* USER CODE BEGIN 1 */
-
 /* USER CODE END 1 */
