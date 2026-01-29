@@ -1,10 +1,5 @@
 #include "control.h"
 
-typedef struct {
-    float integral;
-    float prev_error;
-} PID_State;
-
 static PID_State pid_linear = {0};
 static PID_State pid_angular = {0};
 
@@ -43,36 +38,61 @@ float DC_Motor_Set(DC_Motor *motor, float speed) {
     return (clamped / MAX_SPEED);
 }
 
+void PID_Init(PID_State *pid, float kp, float ki, float kd)
+{
+    pid->integral = 0.0f;
+    pid->prev_error = 0.0f;
+    pid->kp = kp;
+    pid->ki = ki;
+    pid->kd = kd;
+}
+
+float PID_step(PID_State *pid, float expected, float measurement)
+{
+    float error = expected - measurement;
+    float derivative = (error - pid->prev_error) / DT;
+
+    float output = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
+
+    if ((output < PID_OUT_MAX && output > PID_OUT_MIN) ||
+        (output >= PID_OUT_MAX && error < 0) ||
+        (output <= PID_OUT_MIN && error > 0))
+    {
+        pid->integral += error * DT;
+
+        if (pid->integral > PID_MAX_INTEGRAL)
+            pid->integral = PID_MAX_INTEGRAL;
+        else if (pid->integral < -PID_MAX_INTEGRAL)
+            pid->integral = -PID_MAX_INTEGRAL;
+    }
+
+    pid->prev_error = error;
+    return output;
+}
+
+void compute_wheel_speeds(float linear_cmd,
+                               float angular_cmd,
+                               float *speed_left,
+                               float *speed_right)
+{
+    *speed_left  = (linear_cmd - (angular_cmd * TRACK_WIDTH / 2.0f)) / WHEEL_RADIUS;
+    *speed_right = (linear_cmd + (angular_cmd * TRACK_WIDTH / 2.0f)) / WHEEL_RADIUS;
+}
+
+// float PID(float error, float KP, float KI, float KD)
+
 Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
-				  float desired_angular, float desired_linear,
-				  float real_angular, float real_linear,
-                  float KP_lin, float KI_lin, float KD_lin,
-                  float KP_ang, float KI_ang, float KD_ang) {
+                       float desired_angular, float desired_linear,
+                       float real_angular, float real_linear)
+{
+    float linear_cmd  = PID_step(&pid_linear,  desired_linear, real_linear);
+    float angular_cmd = PID_step(&pid_angular, desired_angular, real_angular);
 
-
-    // LINEAR
-    float error_linear = v_linear_desired - v_linear_actual;
-    pid_linear.integral += error_linear * DT;
-    if (pid_linear.integral > MAX_INTEGRAL) pid_linear.integral = MAX_INTEGRAL;
-    if (pid_linear.integral < -MAX_INTEGRAL) pid_linear.integral = -MAX_INTEGRAL;
-    float derivative_linear = (error_linear - pid_linear.prev_error) / DT;
-    float output_linear = KP_lin * error_linear + KI_lin * pid_linear.integral + KD_lin * derivative_linear;
-    pid_linear.prev_error = error_linear;
-
-    // ANGULAR
-    float error_angular = v_angular_desired - v_angular_actual;
-    pid_angular.integral += error_angular * DT;
-    if (pid_angular.integral > MAX_INTEGRAL) pid_angular.integral = MAX_INTEGRAL;
-    if (pid_angular.integral < -MAX_INTEGRAL) pid_angular.integral = -MAX_INTEGRAL;
-    float derivative_angular = (error_angular - pid_angular.prev_error) / DT;
-    float output_angular = KP_ang * error_angular + KI_ang * pid_angular.integral + KD_ang * derivative_angular;
-    pid_angular.prev_error = error_angular;
-
-    float speed_left = output_linear - (output_angular * TRACK_WIDTH / 2.0f);
-    float speed_right = output_linear + (output_angular * TRACK_WIDTH / 2.0f);
+    float speed_left, speed_right;
+    compute_wheel_speeds(linear_cmd, angular_cmd, &speed_left, &speed_right);
 
     Motor_PWM pwm;
-    pwm.left = DC_Motor_Set(left, speed_left);
+    pwm.left  = DC_Motor_Set(left,  speed_left);
     pwm.right = DC_Motor_Set(right, speed_right);
 
     return pwm;

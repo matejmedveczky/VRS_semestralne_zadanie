@@ -108,6 +108,9 @@ int main(void)
   DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_2,
                 GPIOA, GPIO_PIN_3, GPIOA, GPIO_PIN_4);
 
+  PID_Init(&pid_linear,  50.0f, 5.0f, 1.0f);   // linear PID: Kp, Ki, Kd
+  PID_Init(&pid_angular, 30.0f, 3.0f, 0.5f);   // angular PID: Kp, Ki, Kd
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,9 +127,7 @@ int main(void)
 
       Motor_PWM pwm = tank_control(&motorLeft, &motorRight,
                    desired_angular, desired_linear,
-                   real_angular, real_linear,
-                   50.0f, 5.0f, 1.0f,       // linear gains (Kp, Ki, Kd)
-                   30.0f, 3.0f, 0.5f);      // angular gains (Kp, Ki, Kd)
+                   real_angular, real_linear);
 
 	  HAL_Delay(10);
     /* USER CODE BEGIN 3 */
