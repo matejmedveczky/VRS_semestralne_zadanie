@@ -103,13 +103,13 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
-  DC_Motor_Init(&motorLeft, &htim1, TIM_CHANNEL_1,
+  DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_1,
                 GPIOA, GPIO_PIN_0, GPIOA, GPIO_PIN_1);
-  DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_2,
+  DC_Motor_Init(&motorLeft, &htim1, TIM_CHANNEL_2,
                 GPIOA, GPIO_PIN_3, GPIOA, GPIO_PIN_4);
 
-  PID_Init(&pid_linear,  50.0f, 5.0f, 1.0f);   // linear PID: Kp, Ki, Kd
-  PID_Init(&pid_angular, 30.0f, 3.0f, 0.5f);   // angular PID: Kp, Ki, Kd
+  PID_Init(&pid_linear, 1, 0.2, 0.0);
+  PID_Init(&pid_angular, 0.6, 3.5, 0.03);
 
   /* USER CODE END 2 */
 
@@ -119,15 +119,15 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	  float real_angular = read_gyroscope_z(); //TODO
-	  float real_linear = read_accelerometer_x(); //TODO
+	  float real_accel_x = read_accelerometer_x(); //TODO
 
 	  float desired_angular = read_angular_input(); //TODO
 	  float desired_linear = read_linear_input(); //TODO
 
-
       Motor_PWM pwm = tank_control(&motorLeft, &motorRight,
+    		  	   &pid_angular, &pid_linear,
                    desired_angular, desired_linear,
-                   real_angular, real_linear);
+                   real_angular, real_accel_x);
 
 	  HAL_Delay(10);
     /* USER CODE BEGIN 3 */

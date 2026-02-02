@@ -1,7 +1,9 @@
 #include "control.h"
 
-static PID_State pid_linear = {0};
-static PID_State pid_angular = {0};
+static int zupt_counter = 0;
+//static bool can_integrate = true;
+static float integrated_velocity = 0.0f;
+
 
 void DC_Motor_Init(DC_Motor *motor, TIM_HandleTypeDef *htim, uint32_t channel,
                    GPIO_TypeDef *dir1_port, uint16_t dir1_pin,
@@ -42,6 +44,7 @@ void PID_Init(PID_State *pid, float kp, float ki, float kd)
 {
     pid->integral = 0.0f;
     pid->prev_error = 0.0f;
+    pid->prev_output = 0.0f;
     pid->kp = kp;
     pid->ki = ki;
     pid->kd = kd;
@@ -50,6 +53,12 @@ void PID_Init(PID_State *pid, float kp, float ki, float kd)
 float PID_step(PID_State *pid, float expected, float measurement)
 {
     float error = expected - measurement;
+
+
+    if (error < 0.005 && error > -0.005){
+    	return 0;
+    }
+
     float derivative = (error - pid->prev_error) / DT;
 
     float output = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
@@ -67,6 +76,7 @@ float PID_step(PID_State *pid, float expected, float measurement)
     }
 
     pid->prev_error = error;
+    pid->prev_output = output;
     return output;
 }
 
@@ -79,14 +89,33 @@ void compute_wheel_speeds(float linear_cmd,
     *speed_right = (linear_cmd + (angular_cmd * TRACK_WIDTH / 2.0f)) / WHEEL_RADIUS;
 }
 
-// float PID(float error, float KP, float KI, float KD)
 
 Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
+						PID_State *pid_angular, PID_State *pid_linear,
                        float desired_angular, float desired_linear,
-                       float real_angular, float real_linear)
+                       float real_angular, float real_accel_x)
 {
-    float linear_cmd  = PID_step(&pid_linear,  desired_linear, real_linear);
-    float angular_cmd = PID_step(&pid_angular, desired_angular, real_angular);
+    bool should_be_stationary = (fabsf(desired_linear) < ZUPT_CMD_THRESHOLD);
+
+    /*
+	if (can_integrate == false){
+    	pid_angular->ki = 0;
+    	pid_linear->ki = 0;
+    }
+    */
+
+    if (should_be_stationary) {
+        zupt_counter++;
+        if (zupt_counter >= ZUPT_COUNT_THRESHOLD) {
+            real_linear = 0.0f;
+        }
+    } else {
+        zupt_counter = 0;
+        real_linear += real_accel * DT;
+    }
+
+    float linear_cmd  = PID_step(pid_linear,  desired_linear, real_linear);
+    float angular_cmd = PID_step(pid_angular, desired_angular, real_angular);
 
     float speed_left, speed_right;
     compute_wheel_speeds(linear_cmd, angular_cmd, &speed_left, &speed_right);
@@ -94,6 +123,15 @@ Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
     Motor_PWM pwm;
     pwm.left  = DC_Motor_Set(left,  speed_left);
     pwm.right = DC_Motor_Set(right, speed_right);
+
+
+    if (pwm.left > 0.95 || pwm.right > 0.95)
+    {
+    	can_integrate = false;
+    }
+    else{
+    	can_integrate = true;
+    }
 
     return pwm;
 }
