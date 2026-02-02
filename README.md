@@ -1,35 +1,125 @@
-# Battery branch
+# Pásový mobilný robot - Technická špecifikácia
 
+## 1. PREHĽAD PROJEKTU
 
+### 1.1 Cieľ
+Vytvorenie funkčného modelu pásového robota s diferenciálnym pohonom, 
+ovládaného cez WiFi z PC pomocou gamepadu. Riadenie rýchlosti motorov 
+implementované pomocou PID regulátora so spätnou väzbou z IMU.
 
-### 1. POPIS MODULU
+### 1.2 Vlastnosti
+- Diferenciálny pohon: 2× DC775 motor s individuálnym PID riadením
+- Distribuovaná architektúra: STM32 (low-level control) + RPi (WiFi gateway)
+- Riadenie cez WiFi: ROS2 (PC ↔ RPi) + UART (RPi ↔ STM)
 
-   - Tento modul zabezpečuje monitorovanie stavu napájacej batérie mobilného robota. Jeho úlohou je priebežne sledovať napätie
-     batérie, vyhodnocovať jej stav a na základe toho informovať nadradený riadiaci systém a obmedzovať činnosť robota.
+### Členovia tímu
+- Šimon Maco
+- Jakub Benkovský
+- Miroslav Valkovič
+- Matej Medveczky
+---
 
+## 2. SYSTÉMOVÁ ARCHITEKTÚRA
 
+### 2.1 Blokový diagram
+```
+┌──────────┐   WiFi/ROS2    ┌──────────┐   UART 115200    ┌──────────┐
+│ PC       │ ─────────────> │ RPi 4    │ ─────────────>   │ STM32F4  │
+│ Gamepad  │ <───────────── │ Gateway  │ <─────────────   │ MCU      │
+└──────────┘                └──────────┘   spätná väzba   └─────┬────┘
+                                                                │
+                                                                │ PWM/GPIO
+                                                                │
+                                                     ┌──────────┴──────────┐
+                                                     │                     │
+                                                 ┌───▼────┐           ┌───▼────┐
+                                                 │ Motor  │           │ Motor  │
+                                                 │ L      │           │ R      │
+                                                 │ DC775  │           │ DC775  │
+                                                 └────────┘           └────────┘
+                                                     │                     │
+                                                 ┌───▼─────────────────────▼───┐
+                                                 │     MPU6500 IMU             │
+                                                 │  (I2C/SPI to STM)           │
+                                                 └─────────────────────────────┘
+```
+
+### 2.2 Tok dát
+
+1. PC: Vstup z gamepadu → ROS2 
+2. RPi: ROS subscriber → UART 
+3. STM: UART RX → PID regulátor
+4. STM: Čítanie MPU6500 → Integrovanie rýchlosti → spätná väzba PID
+5. STM: Výstup PID → PWM k motorom
+6. STM: Telemetria → UART TX → RPi
+7. RPi: ROS publishers
 
 ---
 
+## 3. HARDVÉROVÁ ŠPECIFIKÁCIA
 
+### 3.1 Komponenty
+| Komponent      | Model/Špecifikácia   | Rozhranie    | Účel                       |
+|----------------|----------------------|--------------|----------------------------|
+| MCU            | STM32                | -            | Riadenie motorov, PID, IMU |
+| SBC            | Raspberry Pi 4B      | WiFi, UART   | ROS gateway                |
+| Motory         | 2× R775 DC           | PWM          | Diferanciálny pohon        |
+| Motor Driver   | LN298N               | GPIO, PWM    | H-bridge                   |
+| IMU            | MPU6500              | I2C/SPI      | Odhad rýchlosti            |
+| Power Monitor  | Voltage divider      | ADC          | Monitorovanie napätia batérie |
+| Batéria        | Lipol 2200mAh 3S 35C | -            | Napájanie                  |
 
-### 2. FUNKCIONALITA
+---
 
-  - Meranie napätia batérie pomocou ADC (cez voltage divider)
+## 4. SOFTVÉROVÁ ARCHITEKTÚRA
 
-  - Vyhodnotenie stavu batérie na základe nameraného napätia
+### 4.1 Raspberry Pi (ROS2 Humble)
 
-  - Detekcia nízkeho napätia batérie:
+#### Node 1: `teleop_node` (Šimon)
+**Vstup:** Gamepad cez `joy` package (sensor_msgs/Joy)  
+**Výstup:** `/cmd_vel` (geometry_msgs/Twist)  
+**Logika:**
+- Mapovanie joysticku → linear.x (dopredu/dozadu), angular.z (rotácia)
+- Deadzone filtering, obmedzenie akcelerácie
+- Bezpečnosť: obmedzenie maximálnej rýchlosti
 
-	- napätie < 10.5 V → varovný stav
+#### Node 2: `uart_bridge_node` (Šimon)
+**Subscribers:**
+- `/cmd_vel` (geometry_msgs/Twist) → serializácia do UART packetu
 
-  - Odosielanie informácií o stave batérie do nadradeného systému (Raspberry Pi)
+**Publishers:**
+- `/battery_state` (sensor_msgs/BatteryState) - napätie z ADC
 
-	- zobrazenie stavu batérie v riadiacom rozhraní
+---
 
-  - Obmedzenie funkcií mobilného robota na základe stavu batérie:
-	- zníženie výkonu
-	- deaktivácia vybraných funkcií pri kritickom napätí
+### 4.2 STM32 Firmware
+
+#### Modul 1: UART komunikácia (Miroslav)
+**Zodpovednosti:**
+- RX interrupt handler + ring buffer
+- Parsovanie frame s CRC validáciou
+
+#### Modul 2: MPU6500 Driver (Miroslav)
+**Zodpovednosti:**
+- I2C/SPI inicializácia
+- Čítanie: accel XYZ, gyro XYZ
+- Kalibrácia
+
+#### Modul 3: Riadenie motorov (Matej)
+**Zodpovednosti:**
+- PWM generácia (TIM2, TIM3)
+
+#### Modul 4: PID regulátor (Matej)
+**Zodpovednosti:**
+- Dvojitý PID regulátor riadiaci motory
+
+#### Modul 5: Monitorovanie batérie (Jakub)
+**Zodpovednosti:**
+- ADC čítanie cez voltage divider
+	- Vyhodnotenie stavu batérie na základe nameraného napätia
+- Alarm pri nízkom napätí: < 10.5V → varovná správa
+- Odosielanie informácií o stave batérie do nadradeného systému (Raspberry Pi)
+- Obmedzenie funkcií mobilného robota na základe stavu batérie
 
 ## Návod na použitie
 ### Klonovanie
@@ -52,5 +142,3 @@ git add .
 git commit -m "POPIS ZMENY"
 git push
 ```
-
-
