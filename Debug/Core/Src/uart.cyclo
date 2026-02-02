@@ -1,0 +1,11 @@
+../Core/Src/uart.c:25:10:crc16_ccitt_false	4
+../Core/Src/uart.c:39:6:uart_start	2
+../Core/Src/uart.c:63:17:circ_available	2
+../Core/Src/uart.c:71:13:circ_peek	3
+../Core/Src/uart.c:81:13:circ_drop	1
+../Core/Src/uart.c:88:13:process_frame	5
+../Core/Src/uart.c:111:6:USART2_IRQHandler	7
+../Core/Src/uart.c:154:6:uart_check	3
+../Core/Src/uart.c:167:6:uart_write_float_output	2
+../Core/Src/uart.c:192:7:uart_read_linear_input	2
+../Core/Src/uart.c:197:7:uart_read_angular_input	2

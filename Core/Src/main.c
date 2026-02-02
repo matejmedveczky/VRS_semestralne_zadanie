@@ -22,6 +22,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "uart.h"
+#include "mpu6500.h"
+#include <math.h>
+#include "control.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,6 +46,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
 I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim1;
@@ -49,7 +56,16 @@ DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
+DC_Motor motorLeft, motorRight;
 
+static PID_State pid_linear = {0};
+static PID_State pid_angular = {0};
+
+
+float desired_angular;
+float desired_linear;
+float real_ang;
+float real_lin;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,6 +119,20 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_1,
+                GPIOA, GPIO_PIN_0, GPIOA, GPIO_PIN_1);
+  DC_Motor_Init(&motorLeft, &htim1, TIM_CHANNEL_2,
+                GPIOA, GPIO_PIN_3, GPIOA, GPIO_PIN_4);
+
+  PID_Init(&pid_linear, 1, 0.2, 0.0);
+  PID_Init(&pid_angular, 0.6, 3.5, 0.03);
+
+
+
+  /* Start DMA reception in circular mode */
+  uart_start(&huart2);
+
+  (void)MPU6500_Init(&hi2c1);
 
   /* USER CODE END 2 */
 
@@ -110,10 +140,37 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+      uart_check();
+      desired_angular = uart_read_angular_input();
+      desired_linear  = uart_read_linear_input();
 
-    /* USER CODE BEGIN 3 */
+
+      real_ang = read_gyroscope_z();
+      real_lin = read_accelerometer_x();
+
+      tank_control(&motorLeft, &motorRight, &pid_angular, &pid_linear, desired_angular, desired_linear, real_ang, real_lin);
+
+      /* UART TX batérie*/
+
+      static uint32_t last_batt_tx = 0;
+      uint32_t now = HAL_GetTick();
+      if ((now - last_batt_tx) >= 200U) {
+          last_batt_tx = now;
+
+//          uart_write_float_output(bs.vbat_filtered);
+//          uart_write_float_output((float)bs.percent);
+          uart_write_float_output(real_ang);
+
+      }
+
+      //uart_write_float_output(real_ang);
+
+      HAL_Delay(4);
   }
+
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
   /* USER CODE END 3 */
 }
 
@@ -130,14 +187,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -156,7 +211,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_TIM1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_TIM1
+                              |RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
@@ -164,6 +221,12 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
+
+/**
+  * @brief ADC2 Initialization Function
+  * @param None
+  * @retval None
+  */
 
 /**
   * @brief I2C1 Initialization Function
@@ -249,7 +312,7 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_OC_Init(&htim1) != HAL_OK)
+  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -260,18 +323,18 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
