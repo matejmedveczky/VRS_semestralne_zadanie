@@ -92,14 +92,16 @@ void compute_wheel_speeds(float linear_cmd,
 Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
 						PID_State *pid_angular, PID_State *pid_linear,
                        float desired_angular, float desired_linear,
-                       float real_angular, float real_linear)
+                       float real_angular, float real_accel_x)
 {
     bool should_be_stationary = (fabsf(desired_linear) < ZUPT_CMD_THRESHOLD);
 
-    if (can_integrate == false){
+    /*
+	if (can_integrate == false){
     	pid_angular->ki = 0;
     	pid_linear->ki = 0;
     }
+    */
 
     if (should_be_stationary) {
         zupt_counter++;
@@ -108,7 +110,7 @@ Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
         }
     } else {
         zupt_counter = 0;
-
+        real_linear += real_accel_x * DT;
     }
 
     float linear_cmd  = PID_step(pid_linear,  desired_linear, real_linear);
@@ -122,7 +124,11 @@ Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
     pwm.right = DC_Motor_Set(right, speed_right);
 
 
+<<<<<<< motor_control
+    if (pwm.left > 0.95 || pwm.right > 0.95)
+=======
     if (pwm.left > (0.95*65536) || pwm.right > (0.95*65536))
+>>>>>>> main
     {
     	can_integrate = false;
     }
