@@ -1,0 +1,6 @@
+../Core/Src/control.c:7:6:DC_Motor_Init	24	static
+../Core/Src/control.c:20:7:DC_Motor_Set	24	static
+../Core/Src/control.c:42:6:PID_Init	24	static
+../Core/Src/control.c:52:7:PID_step	40	static
+../Core/Src/control.c:82:6:compute_wheel_speeds	24	static
+../Core/Src/control.c:92:11:tank_control	88	static

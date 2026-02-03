@@ -1,0 +1,6 @@
+../Core/Src/control.c:7:6:DC_Motor_Init	1
+../Core/Src/control.c:20:7:DC_Motor_Set	9
+../Core/Src/control.c:42:6:PID_Init	1
+../Core/Src/control.c:52:7:PID_step	11
+../Core/Src/control.c:82:6:compute_wheel_speeds	1
+../Core/Src/control.c:92:11:tank_control	6

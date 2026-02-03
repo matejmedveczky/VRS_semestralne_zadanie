@@ -58,7 +58,16 @@ DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
+DC_Motor motorLeft, motorRight;
 
+static PID_State pid_linear = {0};
+static PID_State pid_angular = {0};
+
+
+float desired_angular;
+float desired_linear;
+float real_ang;
+float real_lin;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,12 +123,20 @@ int main(void)
   MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 
+  DC_Motor_Init(&motorRight, &htim1, TIM_CHANNEL_1,
+                GPIOA, GPIO_PIN_0, GPIOA, GPIO_PIN_1);
+  DC_Motor_Init(&motorLeft, &htim1, TIM_CHANNEL_2,
+                GPIOA, GPIO_PIN_3, GPIOA, GPIO_PIN_4);
+
+  PID_Init(&pid_linear, 1, 0.2, 0.0);
+  PID_Init(&pid_angular, 0.6, 3.5, 0.03);
+
+
+
   /* Start DMA reception in circular mode */
   uart_start(&huart2);
 
   (void)MPU6500_Init(&hi2c1);
-
-  BatteryMon_Init(&hadc2);	  /*battery*/
 
   /* USER CODE END 2 */
 
@@ -127,20 +144,18 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      /* Battery update */
-      BatteryStatus bs = BatteryMon_Update(16);   // ADC avg 16*/
+      uart_check();
+      desired_angular = uart_read_angular_input();
+      desired_linear  = uart_read_linear_input();
 
-      /* Aplikuj batériové limity*/
-      desired_linear  *= bs.limits.max_speed;
-      desired_angular *= bs.limits.max_speed;
 
-      /* Kritické stavy = stop */
-      if (bs.state == VBAT_CRIT || bs.state == VBAT_SHUTDOWN) {
-          desired_linear  = 0.0f;
-          desired_angular = 0.0f;
-      }
+      real_ang = read_gyroscope_z();
+      real_lin = read_accelerometer_x();
+
+      tank_control(&motorLeft, &motorRight, &pid_angular, &pid_linear, desired_angular, desired_linear, real_ang, real_lin);
 
       /* UART TX batérie*/
+
       static uint32_t last_batt_tx = 0;
       uint32_t now = HAL_GetTick();
       if ((now - last_batt_tx) >= 200U) {
@@ -216,57 +231,6 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-static void MX_ADC2_Init(void)
-{
-
-  /* USER CODE BEGIN ADC2_Init 0 */
-
-  /* USER CODE END ADC2_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC2_Init 1 */
-
-  /* USER CODE END ADC2_Init 1 */
-
-  /** Common config
-  */
-  hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc2.Init.ContinuousConvMode = DISABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
-  hadc2.Init.DMAContinuousRequests = DISABLE;
-  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  hadc2.Init.LowPowerAutoWait = DISABLE;
-  hadc2.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_4;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.SamplingTime = ADC_SAMPLETIME_181CYCLES_5;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC2_Init 2 */
-
-  /* USER CODE END ADC2_Init 2 */
-
-}
 
 /**
   * @brief I2C1 Initialization Function
