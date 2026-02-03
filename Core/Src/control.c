@@ -1,8 +1,7 @@
 #include "control.h"
 
 static int zupt_counter = 0;
-//static bool can_integrate = true;
-static float integrated_velocity = 0.0f;
+static bool can_integrate = true;
 
 
 void DC_Motor_Init(DC_Motor *motor, TIM_HandleTypeDef *htim, uint32_t channel,
@@ -55,7 +54,7 @@ float PID_step(PID_State *pid, float expected, float measurement)
     float error = expected - measurement;
 
 
-    if (error < 0.01 && error > -0.01){
+    if (error < 0.005 && error > -0.005){
     	return 0;
     }
 
@@ -125,7 +124,11 @@ Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
     pwm.right = DC_Motor_Set(right, speed_right);
 
 
+<<<<<<< motor_control
     if (pwm.left > 0.95 || pwm.right > 0.95)
+=======
+    if (pwm.left > (0.95*65536) || pwm.right > (0.95*65536))
+>>>>>>> main
     {
     	can_integrate = false;
     }

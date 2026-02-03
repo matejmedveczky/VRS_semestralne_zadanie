@@ -1,0 +1,6 @@
+../Drivers/mpu6500/mpu6500.c:26:13:i2c_wr	32	static
+../Drivers/mpu6500/mpu6500.c:31:13:i2c_rd	32	static
+../Drivers/mpu6500/mpu6500.c:36:6:MPU6500_Init	64	static
+../Drivers/mpu6500/mpu6500.c:77:6:MPU6500_ReadRaw	40	static
+../Drivers/mpu6500/mpu6500.c:95:7:read_gyroscope_z	56	static
+../Drivers/mpu6500/mpu6500.c:108:7:read_accelerometer_x	56	static
