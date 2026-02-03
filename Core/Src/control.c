@@ -55,7 +55,7 @@ float PID_step(PID_State *pid, float expected, float measurement)
     float error = expected - measurement;
 
 
-    if (error < 0.005 && error > -0.005){
+    if (error < 0.01 && error > -0.01){
     	return 0;
     }
 
@@ -111,7 +111,7 @@ Motor_PWM tank_control(DC_Motor *left, DC_Motor *right,
         }
     } else {
         zupt_counter = 0;
-        real_linear += real_accel * DT;
+        real_linear += real_accel_x * DT;
     }
 
     float linear_cmd  = PID_step(pid_linear,  desired_linear, real_linear);
